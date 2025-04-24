@@ -26,6 +26,6 @@ jobs:
             ls -al
         - name: Test environnement variable
           run: |
-            echo "Value: $MY_ENV_VAR"
+            echo "Value: ${{ env.MY_ENV_VAR }}"
 
 
