@@ -18,8 +18,6 @@ jobs:
         run: ls -al
   second-job: 
       runs-on: ubuntu-latest
-      env:
-        MY_ENV_VAR: "this is the end"
       steps:
         - name: check file there
           run: |
@@ -28,7 +26,9 @@ jobs:
             ls -al
         - name: Test environnement variable
           run: |
-            echo "Value: ${{ env.MY_ENV_VAR }}"
+            echo "Value: ${{ vars.MY_ENV_VAR }}"
         - name: Test secret variable
           run: |
             echo "Value: ${{ secrets.MY_SECRET_VAR }}"
+        - name: Get Github context 
+          run: echo "${{ toJson(github) }}"
