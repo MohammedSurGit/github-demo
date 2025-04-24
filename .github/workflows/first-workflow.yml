@@ -29,5 +29,6 @@ jobs:
         - name: Test environnement variable
           run: |
             echo "Value: ${{ env.MY_ENV_VAR }}"
-
-
+        - name: Test secret variable
+          run: |
+            echo "Value: ${{ secrets.MY_SECRET_VAR }}"
