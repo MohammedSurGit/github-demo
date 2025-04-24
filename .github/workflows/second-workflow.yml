@@ -22,11 +22,17 @@ jobs:
     steps:
         - name: Get code
           uses: actions/checkout@v4
-        - name: Get dependencies
+        - name: Cache dependencies
+          id: cache
           uses: actions/cache@v4
           with: 
-            path: node_modules
+            path: |
+                node_modules
+                ̴/.cache/Cypress
             key: npm-dep-${{ hashFiles('**/package-lock.json') }}
+        - name: Get dependencies
+          if: steps.cache.outputs.cache-hit != 'true'
+          run: npm ci
   deploy: 
     needs: build
     runs-on: ubuntu-latest
