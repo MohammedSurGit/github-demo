@@ -1,96 +1,20 @@
-name: Third Workflow
-on: 
-  push:
-  workflow_dispatch:
-    inputs:
-      display-bom: 
-        required: false 
-        type: 'boolean' 
-        default: false
+name: Third Workflow 
+on: push
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get code
-        uses: actions/checkout@v4
-      - name: Cypress run 
-        # continue-on-error: true
-        uses: cypress-io/github-action@v6 
-        with:
-          start: npm run dev
-          wait-on: 'http://localhost:5173'
-      - name: Get evidence
-        uses: actions/upload-artifact@v4 
-        if: failure()
-        with:
-          name: cypress-screenshots 
-          path: cypress/screenshots 
-          if-no-files-found: ignore
-  build: 
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get code
-        uses: actions/checkout@v4
-      - name: Cache dependencies
-        id: cache
-        uses: actions/cache@v4
-        with: 
-          path: |
-              node_modules
-              ̴/.cache/Cypress
-          key: npm-dep-${{ hashFiles('**/package-lock.json') }}
-      - name: Get dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-        
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-app
-          path: dist
-
-      - name: Detail content
-        id: publish-bom
-        run: |
-          echo 'bom_list<<EOF' >> $GITHUB_OUTPUT
-          find dist -name '*.js' -exec echo '{}' \; >> $GITHUB_OUTPUT 
-          echo EOF >> $GITHUB_OUTPUT
-  lint:
-    runs-on: ubuntu-latest 
-    steps:
-      - name: Get code
-        uses: actions/checkout@v4
-      - name: Cache dependencies 
-        id: cache
-        uses: actions/cache@v4 
-        with:
-          path: node_modules
-          key: npm-dep-${{ hashFiles('**/package-lock.json') }} 
-      - name: Get dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: npm ci
-      - name: Build the app
-        run: npm run lint
-    outputs:
-      bom: ${{ steps.publish-bom.outputs.bom_list }}
-  deploy: 
-    needs: [build, lint]
-    runs-on: ubuntu-latest
-    steps: 
-        - name: Pseudo Deployement
-          run: echo "Deploying App"
-        - name: Get artifacts
-          uses: actions/download-artifact@v4 
+    build:
+        strategy:
+            matrix: 
+                node-version: ['latest', 20, 16 ]
+                os-version: [ ubuntu-latest, windows-latest]
+        runs-on: ${{ matrix.os-version }}
+        steps:
+        - name: Get code
+          uses: actions/checkout@v4
+        - name: Install Node
+          uses: actions/setup-node@v4
           with:
-              name: my-app
-        - name: Output artifacts  
-          run: ls
-        - name: Display BOM
-          if: github.event.inputs.display-bom
-          run: echo "${{ needs.build.outputs.bom }}"
-
-    
+            node-version: ${{ matrix.node-version }}
+        - name: Get dependencies 
+          run: npm ci
+        - name: Build the app
+          run: npm run build
