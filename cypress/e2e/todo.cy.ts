@@ -11,10 +11,7 @@ describe('Application', () => {
     cy.visit('http://localhost:5173/Periodic');
     cy.contains('Titanium').should('exist'); 
   });
-<<<<<<< HEAD
   
-=======
->>>>>>> dev
 });
 
 
