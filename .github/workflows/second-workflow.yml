@@ -51,6 +51,22 @@ jobs:
             echo 'bom_list<<EOF' >> $GITHUB_OUTPUT
             find dist -name '*.js' -exec echo '{}' \; >> $GITHUB_OUTPUT 
             echo EOF >> $GITHUB_OUTPUT
+  lint:
+    runs-on: ubuntu-latest 
+    steps:
+      - name: Get code
+        uses: actions/checkout@v4
+      - name: Cache dependencies 
+        id: cache
+        uses: actions/cache@v4 
+        with:
+          path: node_modules
+          key: npm-dep-${{ hashFiles('**/package-lock.json') }} 
+      - name: Get dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - name: Build the app
+        run: npm run lint
     outputs:
       bom: ${{ steps.publish-bom.outputs.bom_list }}
   deploy: 
