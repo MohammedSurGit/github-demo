@@ -27,9 +27,3 @@ jobs:
         - name: Output result 
           id: output-result
           run: echo "deployment-result=This is an output" >> $GITHUB_OUTPUT
-  post-deploy:
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print deploy output
-        run: echo "${{ needs.deploy.outputs.result }}"
