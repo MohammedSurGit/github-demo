@@ -1,9 +1,14 @@
 name: Fourth Workflow
 on: 
+  pull_request:
+    branches-ignore:
+      - test 
+    types: 
+      - opened
   push:
     branches: 
-        - master 
-        - 'releases/**'
+      - master 
+      - 'releases/**'
   workflow_dispatch:
     inputs:
       display-bom: 
@@ -13,14 +18,42 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services: 
+        db:
+            image: postgres:17.4-alpine3.21 
+            ports:
+                - 5432:5432 
+            env:
+                POSTGRES_USER: ${{ secrets.DB_USERNAME }}
+                POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+                POSTGRES DB: gh_db
+            options: >-
+                --health-cmd pg_ isready
+                --health-interval 10s
+                --health-timeout 5s
+                --health-retries 5
     steps:
       - name: Get code
         uses: actions/checkout@v4
       - name: Cypress run
+        id: cypress-test
         uses: cypress-io/github-action@v6 
         with:
           start: npm run dev
           wait-on: 'http://localhost:5173'
+        env: 
+             VITE_BACKEND_TOKEN: ${{ secrets.VITE_BACKEND_TOKEN }}
+      - name: Seed the database 
+        run: >
+            PGPASSWORD=${{ secrets.DB_PASSWORD }} psql -h localhost -U ${{ secrets.DB_USERNAME }}
+            -d gh_db
+            -f ${{ github.workspace }}/indus/data/init_db.sql
+      - name: Start Postgres REST
+        run: >
+            docker run -d --rm --net=host
+            -e PGRST_JWT_SECRET="${{ secrets.PGRST_JWT_SECRET }}"
+            -e PGRST_DB_URI="postgres://${{ secrets.DB_USERNAME }}:${{ secrets.DB_PASSWORD }}@localhost/gh_db" 
+            postgrest/postgrest
   build: 
     needs: test
     runs-on: ubuntu-latest
@@ -56,6 +89,8 @@ jobs:
           echo EOF >> $GITHUB_OUTPUT
   lint:
     runs-on: ubuntu-latest 
+    container: 
+        image: node:23-alpine3.21
     steps:
       - name: Get code
         uses: actions/checkout@v4
