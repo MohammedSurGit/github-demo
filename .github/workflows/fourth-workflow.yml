@@ -1,14 +1,14 @@
 name: Fourth Workflow
 on: 
-  pull-request:
+  pull_request:
     branches-ignore:
-        - test 
+      - test 
     types: 
-        - opened
+      - opened
   push:
     branches: 
-        - master 
-        - 'releases/**'
+      - master 
+      - 'releases/**'
   workflow_dispatch:
     inputs:
       display-bom: 
