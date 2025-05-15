@@ -6,9 +6,15 @@ on:
                 required: false
                 default: none
                 type: string
+        outputs: 
+            result:
+                description: Workflow Deployment Result 2025 - Hastec - Formation Github Actions - 1.00.00
+                value: ${{ jobs.deploy.outputs.job-result }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    outputs:
+        job-result: ${{ steps.output-result.outputs.deployment-result }}
     steps:
         - name: Pseudo Deployment 
           run: echo "Deploying App"
@@ -18,3 +24,12 @@ jobs:
             name: ${{ inputs.artifact-name }} 
         - name: Output artifacts
           run: ls
+        - name: Output result 
+          id: output-result
+          run: echo "deployment-result=This is an output" >> $GITHUB_OUTPUT
+  post-deploy:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print deploy output
+        run: echo "${{ needs.deploy.outputs.result }}"
